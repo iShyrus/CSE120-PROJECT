@@ -1,5 +1,11 @@
 import cv2
 import numpy as np
+import time
+from ultralytics import YOLO
+from ultralytics.yolo.v8.detect.predict import DetectionPredictor
+
+#YOLO Model
+model = YOLO("best1.pt")
 
 
 #For ARUCO detection
@@ -22,9 +28,22 @@ cap = cv2.VideoCapture(0)
 # resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
 
 
+fps_start_time = 0
+fps = 0
+
+checkCan = "Nothing"
 #Alter image for detection
 while True:
     ret, frame = cap.read()
+
+    #FPS Check
+    fps_end_time = time.time()
+    time_diff = fps_end_time-fps_start_time
+    fps=1/(time_diff)
+    fps_start_time = fps_end_time
+    fps_text = "FPS: {:.2f}".format(fps)
+    cv2.putText(frame,fps_text,(5,30),cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,255),1) 
+    cv2.putText(frame,checkCan,(5,55),cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,255),1) 
 
     #Helps detect circles
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -54,6 +73,18 @@ while True:
             cv2.circle(img_copy, (int(x),int(y)),5,(0,0,255),-1)
             cv2.putText(img_copy, "Radius {}cm".format(round(objectDiameter,2)), (int(x),int(y-15)), cv2.FONT_HERSHEY_PLAIN,2, (100,200,0),2) 
 
+
+    #Detects good/bad can
+    detect_params = model.predict(source=[frame], conf=0.9, device=0)
+    checkCan ="Nothing"
+    for r in detect_params:
+        for c in r.boxes.cls:
+            if model.names[int(c)] =="0":
+                checkCan = "Good Can"
+
+
+
+    
 
 
     cv2.imshow("Resized image", img_copy)
