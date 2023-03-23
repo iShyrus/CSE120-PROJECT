@@ -16,7 +16,7 @@ Clone the repository:
 </code></pre>
 
 Install the required Python packages:
-<pre><code>git clone pip install -r requirements.txt
+<pre><code>pip install -r requirements.txt
 </code></pre>
 
 Connect the cameras to the computer and make sure it is recognized by OpenCV.
