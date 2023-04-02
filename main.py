@@ -34,12 +34,13 @@ class MainWindow(QMainWindow):
         self.camera3.setPixmap(QPixmap.fromImage(image))
 
     def startup(self):
-        self.on_pushButton.setStyleSheet("QPushButton{ background-image: url(off.png); }")
+        self.on_pushButton.setStyleSheet("QPushButton { background-image: url(off.png); }")
+        self.logo_label.setStyleSheet("QLabel { image: url(NJFCO_logo.png);}")
 
     # On/Off button click
     def turn_on(self):
         if self.power:
-            self.on_pushButton.setStyleSheet("QPushButton{ background-image: url(off.png); }")
+            self.on_pushButton.setStyleSheet("QPushButton { background-image: url(off.png); }")
             self.notification_label.setStyleSheet(open('rejected.css').read())
             self.notification_label.setText("REJECTED")
             self.top_camera.stop()
@@ -47,7 +48,7 @@ class MainWindow(QMainWindow):
             self.right_camera.stop()
             self.power = False
         else:
-            self.on_pushButton.setStyleSheet("QPushButton{ background-image: url(on.png); }")
+            self.on_pushButton.setStyleSheet("QPushButton { background-image: url(on.png); }")
             self.notification_label.setStyleSheet(open('accepted.css').read())
             self.notification_label.setText("ACCEPTED")
             self.top_camera.start()

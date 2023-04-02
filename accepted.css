@@ -1,4 +1,5 @@
 QLabel {
     background-color: rgb(34, 255, 15);
     color: black;
+    border-radius: 25px;
 }
