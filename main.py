@@ -4,11 +4,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5 import uic
 import cv2
-import os
-import time
-import re
-from tflite_runtime.interpreter import Interpreter
-import numpy as np
+from cvlib.object_detection import YOLO
+import csv
+import datetime
 
 CAMERA_WIDTH = 640
 CAMERA_HEIGHT = 480
@@ -71,40 +69,6 @@ class MainWindow(QMainWindow):
             self.left_camera.start()
             #self.right_camera.start()
             self.power = True
-        
-
-
-""" Tensor Functions and Object Detection """
-def set_input_tensor(interpreter, image):
-    tensor_index = interpreter.get_input_details()[0]['index']
-    input_tensor = interpreter.tensor(tensor_index)()[0]
-    input_tensor[:, :] = np.expand_dims((image-255)/255, axis=0)
-    
-def get_output_tensor(interpreter, index):
-    output_details = interpreter.get_output_details()[index]
-    tensor = np.squeeze(interpreter.get_tensor(output_details['index']))
-    return tensor
-    
-def detect_objects(interpreter, image, threshold):
-    """ Returns a list of detection results, each a dictionary of object info """
-    set_input_tensor(interpreter, image)
-    interpreter.invoke()
-    
-    boxes = get_output_tensor(interpreter, 1)
-    classes = get_output_tensor(interpreter, 3)
-    scores = get_output_tensor(interpreter, 0)
-    count = int(get_output_tensor(interpreter, 2))
-    
-    results = []
-    for i in range(count):
-        if scores[i] >= threshold:
-            result = {
-                'bounding_box': boxes[i],
-                'class_id': classes[i],
-                'score': scores[i]
-            }
-            results.append(result)
-    return results
 
 
 """ Camera Feeds Threads """
@@ -114,36 +78,36 @@ class CameraFeed(QThread):
     
     def run(self):
         self.ThreadActive = True
-        
-        interpreter = Interpreter('detect.tflite')
-        interpreter.allocate_tensors()
-        _, input_height, input_width, _ = interpreter.get_input_details()[0]['shape']
-
-        
+        weights = "sideview-yolov4-tiny-detector_best.weights"
+        config = "sideview-yolov4-tiny-detector.cfg"
+        labels = "obj.names"
+        color = (100,100,100)   
         capture = cv2.VideoCapture(0)
 
         while self.ThreadActive:
             ret, frame = capture.read()
-            """ Create QT compatible image if no issue """
+            
             if ret:
                 img = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (320, 320))
-                res = detect_objects(interpreter, img, 0.2)
-                print(res)
-                
-                for result in res:
-                    if result['score'] > 0.8:
-                        ymin, xmin, ymax, xmax = result['bounding_box']
-                        xmin = int(max(1,xmin * CAMERA_WIDTH))
-                        xmax = int(min(CAMERA_WIDTH, xmax * CAMERA_WIDTH))
-                        ymin = int(max(1, ymin * CAMERA_HEIGHT))
-                        ymax = int(min(CAMERA_HEIGHT, ymax * CAMERA_HEIGHT))
-                        
-                        img = cv2.rectangle(frame,(xmin, ymin),(xmax, ymax),(0,255,0),3)
-                        img = cv2.putText(frame, "GoodCan", (xmin, min(ymax, CAMERA_HEIGHT-20)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255,255,255),2,cv2.LINE_AA) 
+                yolo = YOLO(weights, config, labels)
+                bbox, label, conf = yolo.detect_objects(img)
+                cam = yolo.draw_bbox(img, bbox, label, conf, color)
+                print(label)
+                print(conf)
+
+                try:
+                    # In list of detected objects identify the most confident
+                    can = conf.index(max(conf))
+
+                    # Emit to notification banner
+                    if label[can] == 'good':
                         self.notification_update.emit(True)
                     else:
                         self.notification_update.emit(False)
-                
+                except ValueError:
+                    print("No object detected")
+
+                """ Recreate QT compatible image"""
                 flipped_img = cv2.flip(img, 1)
                 convert_to_QtFormat = QImage(flipped_img.data, flipped_img.shape[1], flipped_img.shape[0], QImage.Format_RGB888)
                 pic = convert_to_QtFormat.scaled(320, 320, Qt.KeepAspectRatio)
