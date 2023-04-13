@@ -20,9 +20,10 @@ class MainWindow(QMainWindow):
         """ Create Camera Feeds and Connect Labels"""
         self.top_camera = TopCameraFeedTinyYOLOV4()
         self.top_camera.image_update.connect(self.image_update_slot1)
+        self.top_camera.notification_update.connect(self.notification_banner_update)
         self.left_camera = CameraFeed()
         self.left_camera.image_update.connect(self.image_update_slot2)
-        self.left_camera.notification_update.connect(self.notification_banner_update)
+        #self.left_camera.notification_update.connect(self.notification_banner_update)
         #self.right_camera = CameraFeed()
         #self.right_camera.image_update.connect(self.image_update_slot)
 
@@ -63,7 +64,7 @@ class MainWindow(QMainWindow):
             self.on_pushButton.setStyleSheet("QPushButton { background-image: url(off.png); }")
             self.notification_label.setStyleSheet(open('rejected.css').read())
             self.notification_label.setText("OFF")
-            #self.top_camera.stop()
+            self.top_camera.stop()
             self.left_camera.stop()
             #self.right_camera.stop()
             self.power = False
@@ -71,13 +72,14 @@ class MainWindow(QMainWindow):
             self.on_pushButton.setStyleSheet("QPushButton { background-image: url(on.png); }")
             self.notification_label.setStyleSheet(open('accepted.css').read())
             self.notification_label.setText("ON")
-            #self.top_camera.start()
+            self.top_camera.start()
             self.left_camera.start()
             #self.right_camera.start()
             self.power = True
 
 class TopCameraFeedTinyYOLOV4(QThread):
     image_update = pyqtSignal(QImage)
+    notification_update = pyqtSignal(bool)
 
     def run(self):
         self.ThreadActive = True
@@ -162,17 +164,17 @@ class CameraFeed(QThread):
                 print(label)
                 print(conf)
 
-                try:
-                    # In list of detected objects identify the most confident
-                    can = conf.index(max(conf))
+                # try:
+                #     # In list of detected objects identify the most confident
+                #     can = conf.index(max(conf))
 
-                    # Emit to notification banner
-                    if label[can] == 'good':
-                        self.notification_update.emit(True)
-                    else:
-                        self.notification_update.emit(False)
-                except ValueError:
-                    print("No object detected")
+                #     # Emit to notification banner
+                #     if label[can] == 'good':
+                #         self.notification_update.emit(True)
+                #     else:
+                #         self.notification_update.emit(False)
+                # except ValueError:
+                #     print("No object detected")
 
                 """ Recreate QT compatible image"""
                 flipped_img = cv2.flip(img, 1)
