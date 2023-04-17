@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 1, 'top')
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'obj.names', 0, 'left')
+        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 0, 'left')
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
 
