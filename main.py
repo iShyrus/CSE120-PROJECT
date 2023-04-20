@@ -18,12 +18,15 @@ class MainWindow(QMainWindow):
         self.show()
 
         """ Create Camera Feeds and Connect Labels """
-        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 1, 'top')
+        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 0, 'top')
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 0, 'left')
+        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left')
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
+        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 2, 'right')
+        self.right_camera.image_update.connect(self.image_update_slot3)
+        self.right_camera.notification_update.connect(self.notification_banner_update)
 
         """ Connect Power Button """
         self.power = False
@@ -38,19 +41,19 @@ class MainWindow(QMainWindow):
     def image_update_slot2(self, image):
         self.camera2.setPixmap(QPixmap.fromImage(image))
 
-    #def image_update_slot3(self, image):
-    #    self.camera3.setPixmap(QPixmap.fromImage(image))
+    def image_update_slot3(self, image):
+        self.camera3.setPixmap(QPixmap.fromImage(image))
         
     """ Update Notification Banner """
     def notification_banner_update(self):
         # Global variables for CSV file
         global csv_file, csv_writer
         # Global variables for can classification
-        global set_emit1, set_emit2
+        global set_emit1, set_emit2, set_emit3
 
         # Compare and update banner
         acceptance = ''
-        if set_emit1 and set_emit2:
+        if set_emit1 and set_emit2 and set_emit3:
             self.notification_label.setStyleSheet(open('accepted.css').read())
             self.notification_label.setText('ACCEPTED')
             acceptance = 'GOOD'
@@ -75,7 +78,7 @@ class MainWindow(QMainWindow):
             self.notification_label.setText('OFF')
             self.top_camera.stop()
             self.left_camera.stop()
-            #self.right_camera.stop()
+            self.right_camera.stop()
             self.power = False
         else:
             self.on_pushButton.setStyleSheet('QPushButton { background-image: url(on.png); }')
@@ -83,7 +86,7 @@ class MainWindow(QMainWindow):
             self.notification_label.setText('ON')
             self.top_camera.start()
             self.left_camera.start()
-            #self.right_camera.start()
+            self.right_camera.start()
             self.power = True
 
 """ Camera Feed Thread """
@@ -126,7 +129,7 @@ class CameraFeed(QThread):
                     if conf[can] < .85:
                         continue
                     # Global variable for can classification
-                    global set_emit1, set_emit2
+                    global set_emit1, set_emit2, set_emit3
 
                     # Set can global variable
                     if label[can] == 'Good can' and self.cam_position == 'top':
@@ -138,6 +141,10 @@ class CameraFeed(QThread):
                         set_emit2 = True
                     elif label[can] == 'bad' and self.cam_position == 'left':
                         set_emit2 = False
+                    elif label[can] == 'good' and self.cam_position == 'right':
+                        set_emit3 = True
+                    elif label[can] == 'bad' and self.cam_position == 'right':
+                        set_emit3 = False
                     
                     # Update Banner
                     self.notification_update.emit()
@@ -165,6 +172,7 @@ def main():
 if __name__ == '__main__':
     set_emit1 = False
     set_emit2 = False
+    set_emit3 = False
     csv_file = open('object_detection.csv', 'w')
     csv_writer = csv.writer(csv_file)
     csv_writer.writerow(['Object', 'Time' ])
