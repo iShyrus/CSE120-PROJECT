@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         self.right_camera.notification_update.connect(self.notification_banner_update)
 
     def yolov8Check(self):
-        self.top_camera = CameraFeed(YOLOV8('topOptimizedYOLOV8.pt'), '', '', 2, 'top',"yolov8")
+        self.top_camera = CameraFeed(YOLOV8('topYoloV8Weights.pt'), '', '', 2, 'top',"yolov8")
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
         self.left_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 1, 'left',"yolov8")
