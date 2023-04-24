@@ -133,6 +133,7 @@ class MainWindow(QMainWindow):
     def fps_update(self):
         global set_fps
         self.fps_label.setText("FPS: "+str(set_fps))
+        print(set_fps)
 
 """ Camera Feed Thread """
 class CameraFeed(QThread):
@@ -161,21 +162,17 @@ class CameraFeed(QThread):
             #if count % 10 != 0:
             #    continue
 
-            """FPS"""
-            global set_fps
-            fps_end_time = time.time()
-            time_diff = fps_end_time-fps_start_time
-            try:
-                fps=1/(time_diff)
-            except ZeroDivisionError:
-                fps = 0
-            fps_start_time = fps_end_time
-            global set_fps  
-            set_fps = fps
-
             """ Call Object Detection on Image """
             if ret:
                 img = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (400, 250))
+
+                """FPS Check"""
+                fps_end_time = time.time()
+                time_diff = fps_end_time-fps_start_time
+                fps=1/(time_diff)
+                fps_start_time = fps_end_time
+                global set_fps  
+                set_fps = fps
 
                 # Resize image and detect object
                 if self.model =="tinyYolo":
