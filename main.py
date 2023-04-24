@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
 
-        
+
 
     """ Connect CameraFeed Signal to Label """
     def image_update_slot1(self, image):
@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
 
     def image_update_slot3(self, image):
         self.camera3.setPixmap(QPixmap.fromImage(image))
-        
+
     """ Update Notification Banner """
     def notification_banner_update(self):
         # Global variables for CSV file
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
             self.notification_label.setStyleSheet(open('rejected.css').read())
             self.notification_label.setText('REJECTED')
             acceptance = 'DAMAGED'
-        
+
         # Write rejection/acceptance to CSV file
         current_time = datetime.datetime.now()
         csv_writer.writerow([acceptance, current_time])
@@ -121,10 +121,10 @@ class CameraFeed(QThread):
         self.capture = cv2.VideoCapture(cam_index)
         self.cam_position = pos
         self.model = model
-    
+
     def run(self):
         self.ThreadActive = True
-        color = (255,255,255)   
+        color = (255,255,255)
 
         while self.ThreadActive:
             ret, frame = self.capture.read()
@@ -167,25 +167,25 @@ class CameraFeed(QThread):
                             set_emit3 = True
                         elif label[can] == 'bad' and self.cam_position == 'right':
                             set_emit3 = False
-                        
+
                         # Update Banner
                         self.notification_update.emit()
-                        
+
 
                     except ValueError:
                         print('No object detected')
 
                 if self.model == "yolov8":
+
                     model = self.weights
                     detect_params = model.predict(source=[frame], conf=0.9, device = "0")
                     checkCan ="Nothing"
                     for r in detect_params:
-                        confidence = str(r.boxes.conf)   
+                        confidence = str(r.boxes.conf)
                         confidence = confidence.replace("tensor([","")
                         confidence = confidence.replace("], device='cuda:0')","")
                         for c in r.boxes.cls:
-                            checkCan = model.names[int(c)]                   
-                            print(checkCan) 
+                            checkCan = model.names[int(c)]
 
 
                     """ Classify Detected Object and Update Notification"""
@@ -209,10 +209,10 @@ class CameraFeed(QThread):
                             set_emit3 = True
                         elif checkCan == 'bad' and self.cam_position == 'right':
                             set_emit3 = False
-                        
+
                         # Update Banner
                         self.notification_update.emit()
-                        
+
 
                     except ValueError:
                         print('No object detected')
@@ -222,14 +222,14 @@ class CameraFeed(QThread):
                 convert_to_QtFormat = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGB888)
                 pic = convert_to_QtFormat.scaled(400, 250, Qt.KeepAspectRatio)
                 self.image_update.emit(pic)
-                
+
 
     def stop(self):
         self.ThreadActive = False
         self.quit()
-    
 
-    
+
+
 def main():
     app = QApplication([])
     Root = MainWindow()
