@@ -227,6 +227,19 @@
      <string>High Performance(YOLOv8)</string>
     </property>
    </widget>
+   <widget class="QLabel" name="fps_label">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>140</y>
+      <width>101</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>FPS: </string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
