@@ -165,7 +165,10 @@ class CameraFeed(QThread):
             global set_fps
             fps_end_time = time.time()
             time_diff = fps_end_time-fps_start_time
-            fps=1/(time_diff)
+            try:
+                fps=1/(time_diff)
+            except ZeroDivisionError:
+                fps = 0
             fps_start_time = fps_end_time
             global set_fps  
             set_fps = fps
