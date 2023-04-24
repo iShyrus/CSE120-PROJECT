@@ -7,6 +7,8 @@ import cv2
 from cvlib.object_detection import YOLO
 import csv
 import datetime
+from ultralytics import YOLO as YOLOV8
+from ultralytics.yolo.v8.detect.predict import DetectionPredictor
 
 CAMERA_WIDTH = 640
 CAMERA_HEIGHT = 480
@@ -17,22 +19,39 @@ class MainWindow(QMainWindow):
         uic.loadUi("can_detection_gui.ui", self)
         self.show()
 
-        """ Create Camera Feeds and Connect Labels """
-        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 0, 'top')
-        self.top_camera.image_update.connect(self.image_update_slot1)
-        self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left')
-        self.left_camera.image_update.connect(self.image_update_slot2)
-        self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 2, 'right')
-        self.right_camera.image_update.connect(self.image_update_slot3)
-        self.right_camera.notification_update.connect(self.notification_banner_update)
-
         """ Connect Power Button """
         self.power = False
         self.startup()
         self.on_pushButton.setFlat(True)
         self.on_pushButton.clicked.connect(self.turn_on)
+
+        """ Button Switch Tiny-YOLO / YOLOv8"""
+        self.tiny_button.clicked.connect(self.tinyYoloCheck)
+        self.yolov8_button.clicked.connect(self.yolov8Check)
+
+    def tinyYoloCheck(self):
+        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top',"tinyYolo")
+        self.top_camera.image_update.connect(self.image_update_slot1)
+        self.top_camera.notification_update.connect(self.notification_banner_update)
+        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left',"tinyYolo")
+        self.left_camera.image_update.connect(self.image_update_slot2)
+        self.left_camera.notification_update.connect(self.notification_banner_update)
+        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 0, 'right',"tinyYolo")
+        self.right_camera.image_update.connect(self.image_update_slot3)
+        self.right_camera.notification_update.connect(self.notification_banner_update)
+
+    def yolov8Check(self):
+        self.top_camera = CameraFeed(YOLOV8('topOptimizedYOLOV8.pt'), '', '', 2, 'top',"yolov8")
+        self.top_camera.image_update.connect(self.image_update_slot1)
+        self.top_camera.notification_update.connect(self.notification_banner_update)
+        self.left_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 1, 'left',"yolov8")
+        self.left_camera.image_update.connect(self.image_update_slot2)
+        self.left_camera.notification_update.connect(self.notification_banner_update)
+        self.right_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 0, 'right',"yolov8")
+        self.right_camera.image_update.connect(self.image_update_slot3)
+        self.right_camera.notification_update.connect(self.notification_banner_update)
+
+        
 
     """ Connect CameraFeed Signal to Label """
     def image_update_slot1(self, image):
@@ -94,13 +113,14 @@ class CameraFeed(QThread):
     image_update = pyqtSignal(QImage)
     notification_update = pyqtSignal()
 
-    def __init__(self, weights, config, labels, cam_index, pos) -> None:
+    def __init__(self, weights, config, labels, cam_index, pos ,model) -> None:
         super().__init__()
         self.weights = weights
         self.config = config
         self.labels = labels
         self.capture = cv2.VideoCapture(cam_index)
         self.cam_position = pos
+        self.model = model
     
     def run(self):
         self.ThreadActive = True
@@ -115,42 +135,88 @@ class CameraFeed(QThread):
 
             """ Call Object Detection on Image """
             if ret:
-                # Resize image and detect object
                 img = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (400, 250))
-                yolo = YOLO(self.weights, self.config, self.labels)
-                bbox, label, conf = yolo.detect_objects(img)
-                cam = yolo.draw_bbox(img, bbox, label, conf, color)
 
-                """ Classify Detected Object and Update Notification"""
-                try:
-                    # In list of detected objects identify the most confident
-                    can = conf.index(max(conf))
-                    # Make sure confidence level is high enough
-                    if conf[can] < .85:
-                        continue
-                    # Global variable for can classification
-                    global set_emit1, set_emit2, set_emit3
+                # Resize image and detect object
+                if self.model =="tinyYolo":
+                    yolo = YOLO(self.weights, self.config, self.labels)
+                    bbox, label, conf = yolo.detect_objects(img)
+                    cam = yolo.draw_bbox(img, bbox, label, conf, color)
 
-                    # Set can global variable
-                    if label[can] == 'Good can' and self.cam_position == 'top':
-                        set_emit1 = True
-                    elif label[can] == 'Damaged Can' and self.cam_position == 'top':
-                        set_emit1 = False
-                        print(label[can])
-                    elif label[can] == 'good' and self.cam_position == 'left':
-                        set_emit2 = True
-                    elif label[can] == 'bad' and self.cam_position == 'left':
-                        set_emit2 = False
-                    elif label[can] == 'good' and self.cam_position == 'right':
-                        set_emit3 = True
-                    elif label[can] == 'bad' and self.cam_position == 'right':
-                        set_emit3 = False
-                    
-                    # Update Banner
-                    self.notification_update.emit()
+                    """ Classify Detected Object and Update Notification"""
+                    try:
+                        # In list of detected objects identify the most confident
+                        can = conf.index(max(conf))
+                        # Make sure confidence level is high enough
+                        if conf[can] < .85:
+                            continue
+                        # Global variable for can classification
+                        global set_emit1, set_emit2, set_emit3
 
-                except ValueError:
-                    print('No object detected')
+                        # Set can global variable
+                        if label[can] == 'Good can' and self.cam_position == 'top':
+                            set_emit1 = True
+                        elif label[can] == 'Damaged Can' and self.cam_position == 'top':
+                            set_emit1 = False
+                            print(label[can])
+                        elif label[can] == 'good' and self.cam_position == 'left':
+                            set_emit2 = True
+                        elif label[can] == 'bad' and self.cam_position == 'left':
+                            set_emit2 = False
+                        elif label[can] == 'good' and self.cam_position == 'right':
+                            set_emit3 = True
+                        elif label[can] == 'bad' and self.cam_position == 'right':
+                            set_emit3 = False
+                        
+                        # Update Banner
+                        self.notification_update.emit()
+                        
+
+                    except ValueError:
+                        print('No object detected')
+
+                if self.model == "yolov8":
+                    model = self.weights
+                    detect_params = model.predict(source=[frame], conf=0.9, device = "0")
+                    checkCan ="Nothing"
+                    for r in detect_params:
+                        confidence = str(r.boxes.conf)   
+                        confidence = confidence.replace("tensor([","")
+                        confidence = confidence.replace("], device='cuda:0')","")
+                        for c in r.boxes.cls:
+                            checkCan = model.names[int(c)]                   
+                            print(checkCan) 
+
+
+                    """ Classify Detected Object and Update Notification"""
+                    try:
+                        # Make sure confidence level is high enough
+                        if int(confidence) < .85:
+                            continue
+                        # Global variable for can classification
+
+                        # Set can global variable
+                        if checkCan == 'Good can' and self.cam_position == 'top':
+                            print("CHECKING")
+                            set_emit1 = True
+                        elif checkCan == 'Damaged Can' and self.cam_position == 'top':
+                            set_emit1 = False
+                        elif checkCan == 'good' and self.cam_position == 'left':
+                            set_emit2 = True
+                        elif checkCan == 'bad' and self.cam_position == 'left':
+                            set_emit2 = False
+                        elif checkCan == 'good' and self.cam_position == 'right':
+                            set_emit3 = True
+                        elif checkCan == 'bad' and self.cam_position == 'right':
+                            set_emit3 = False
+                        
+                        # Update Banner
+                        self.notification_update.emit()
+                        
+
+                    except ValueError:
+                        print('No object detected')
+
 
                 """ Recreate QT compatible image"""
                 convert_to_QtFormat = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGB888)
