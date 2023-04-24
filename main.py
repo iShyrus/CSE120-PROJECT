@@ -51,12 +51,6 @@ class MainWindow(QMainWindow):
 
     """Tiny Yolo"""
     def tinyYoloCheck(self):
-        self.on_pushButton.setStyleSheet('QPushButton { background-image: url(off.png); }')
-        self.notification_label.setStyleSheet(open('rejected.css').read())
-        self.notification_label.setText('TinyYolo')
-        self.top_camera.stop()
-        self.left_camera.stop()
-        self.right_camera.stop()
         self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top',"tinyYolo")
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
@@ -66,19 +60,9 @@ class MainWindow(QMainWindow):
         self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 0, 'right',"tinyYolo")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
-        self.top_camera.start()
-        self.left_camera.start()
-        self.right_camera.start()
-        self.power = True
 
     """YOLOv8"""
     def yolov8Check(self):
-        self.on_pushButton.setStyleSheet('QPushButton { background-image: url(off.png); }')
-        self.notification_label.setStyleSheet(open('rejected.css').read())
-        self.notification_label.setText('YoloV8')
-        self.top_camera.stop()
-        self.left_camera.stop()
-        self.right_camera.stop()
         self.top_camera = CameraFeed(YOLOV8('topYoloV8Weights.pt'), '', '', 2, 'top',"yolov8")
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
@@ -88,10 +72,6 @@ class MainWindow(QMainWindow):
         self.right_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 0, 'right',"yolov8")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
-        self.top_camera.start()
-        self.left_camera.start()
-        self.right_camera.start()
-        self.power = True
 
 
     """ Connect CameraFeed Signal to Label """
@@ -171,8 +151,8 @@ class CameraFeed(QThread):
     def run(self):
         self.ThreadActive = True
         color = (255,255,255)
-        fps_start_time = 0
-        fps = 0
+        fps_start_time = 1
+        fps = 1
 
         while self.ThreadActive:
             ret, frame = self.capture.read()
@@ -185,10 +165,7 @@ class CameraFeed(QThread):
             global set_fps
             fps_end_time = time.time()
             time_diff = fps_end_time-fps_start_time
-            try:
-                fps=1/(time_diff)
-            except ZeroDivisionError:
-                fps = 0
+            fps=1/(time_diff)
             fps_start_time = fps_end_time
             global set_fps  
             set_fps = fps
@@ -238,7 +215,7 @@ class CameraFeed(QThread):
                 if self.model == "yolov8":
 
                     model = self.weights
-                    detect_params = model.predict(source=[frame], conf=0.9)
+                    detect_params = model.predict(source=[frame], conf=0.9, device = "0")
                     checkCan ="Nothing"
                     for r in detect_params:
                         confidence = str(r.boxes.conf)
