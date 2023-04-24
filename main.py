@@ -40,27 +40,46 @@ class MainWindow(QMainWindow):
 
     """Tiny Yolo"""
     def tinyYoloCheck(self):
-        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top',"tinyYolo")
-        self.top_camera.image_update.connect(self.image_update_slot1)
-        self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left',"tinyYolo")
-        self.left_camera.image_update.connect(self.image_update_slot2)
-        self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 0, 'right',"tinyYolo")
-        self.right_camera.image_update.connect(self.image_update_slot3)
-        self.right_camera.notification_update.connect(self.notification_banner_update)
+        if self.power:
+            self.on_pushButton.setStyleSheet('QPushButton { background-image: url(off.png); }')
+            self.notification_label.setStyleSheet(open('rejected.css').read())
+            self.notification_label.setText('OFF')
+            self.top_camera.stop()
+            self.left_camera.stop()
+            self.right_camera.stop()
+            self.power = False
+        else:
+            self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top',"tinyYolo")
+            self.top_camera.image_update.connect(self.image_update_slot1)
+            self.top_camera.notification_update.connect(self.notification_banner_update)
+            self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left',"tinyYolo")
+            self.left_camera.image_update.connect(self.image_update_slot2)
+            self.left_camera.notification_update.connect(self.notification_banner_update)
+            self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 0, 'right',"tinyYolo")
+            self.right_camera.image_update.connect(self.image_update_slot3)
+            self.right_camera.notification_update.connect(self.notification_banner_update)
+        
 
     """YOLOv8"""
     def yolov8Check(self):
-        self.top_camera = CameraFeed(YOLOV8('topYoloV8Weights.pt'), '', '', 2, 'top',"yolov8")
-        self.top_camera.image_update.connect(self.image_update_slot1)
-        self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 1, 'left',"yolov8")
-        self.left_camera.image_update.connect(self.image_update_slot2)
-        self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 0, 'right',"yolov8")
-        self.right_camera.image_update.connect(self.image_update_slot3)
-        self.right_camera.notification_update.connect(self.notification_banner_update)
+        if self.power:
+            self.on_pushButton.setStyleSheet('QPushButton { background-image: url(off.png); }')
+            self.notification_label.setStyleSheet(open('rejected.css').read())
+            self.notification_label.setText('OFF')
+            self.top_camera.stop()
+            self.left_camera.stop()
+            self.right_camera.stop()
+            self.power = False
+        else:
+            self.top_camera = CameraFeed(YOLOV8('topYoloV8Weights.pt'), '', '', 2, 'top',"yolov8")
+            self.top_camera.image_update.connect(self.image_update_slot1)
+            self.top_camera.notification_update.connect(self.notification_banner_update)
+            self.left_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 1, 'left',"yolov8")
+            self.left_camera.image_update.connect(self.image_update_slot2)
+            self.left_camera.notification_update.connect(self.notification_banner_update)
+            self.right_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 0, 'right',"yolov8")
+            self.right_camera.image_update.connect(self.image_update_slot3)
+            self.right_camera.notification_update.connect(self.notification_banner_update)
 
 
     """ Connect CameraFeed Signal to Label """
@@ -151,7 +170,6 @@ class CameraFeed(QThread):
             #    continue
 
 
-
             """ Call Object Detection on Image """
             if ret:
                 img = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (400, 250))
@@ -206,7 +224,8 @@ class CameraFeed(QThread):
                 if self.model == "yolov8":
 
                     model = self.weights
-                    detect_params = model.predict(source=[frame], conf=0.9, device = "0")
+                    #device = 0 if gpu
+                    detect_params = model.predict(source=[frame], conf=0.9)
                     checkCan ="Nothing"
                     for r in detect_params:
                         confidence = str(r.boxes.conf)
