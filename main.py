@@ -3,6 +3,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5 import uic
+from PyQt5.QtCore import QTimer
+
 import cv2
 from cvlib.object_detection import YOLO
 import csv
@@ -30,6 +32,13 @@ class MainWindow(QMainWindow):
         self.tiny_button.clicked.connect(self.tinyYoloCheck)
         self.yolov8_button.clicked.connect(self.yolov8Check)
 
+        """Timer for FPS Update"""
+        self.timer = QTimer()
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.fps_update)
+        self.timer.start()
+
+    """Tiny Yolo"""
     def tinyYoloCheck(self):
         self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top',"tinyYolo")
         self.top_camera.image_update.connect(self.image_update_slot1)
@@ -41,6 +50,7 @@ class MainWindow(QMainWindow):
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
 
+    """YOLOv8"""
     def yolov8Check(self):
         self.top_camera = CameraFeed(YOLOV8('topYoloV8Weights.pt'), '', '', 2, 'top',"yolov8")
         self.top_camera.image_update.connect(self.image_update_slot1)
@@ -51,7 +61,6 @@ class MainWindow(QMainWindow):
         self.right_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 0, 'right',"yolov8")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
-
 
 
     """ Connect CameraFeed Signal to Label """
@@ -109,7 +118,10 @@ class MainWindow(QMainWindow):
             self.right_camera.start()
             self.power = True
     
-
+    """FPS Update"""
+    def fps_update(self):
+        global set_fps
+        self.fps_label.setText("FPS: "+str(set_fps))
 
 """ Camera Feed Thread """
 class CameraFeed(QThread):
@@ -137,12 +149,16 @@ class CameraFeed(QThread):
             #count += 1
             #if count % 10 != 0:
             #    continue
+
+            """FPS"""
             global set_fps
             fps_end_time = time.time()
             time_diff = fps_end_time-fps_start_time
             fps=1/(time_diff)
             fps_start_time = fps_end_time
-            print(fps)
+            global set_fps  
+            set_fps = fps
+
             """ Call Object Detection on Image """
             if ret:
                 img = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (400, 250))
@@ -207,7 +223,6 @@ class CameraFeed(QThread):
 
                         # Set can global variable
                         if checkCan == 'Good can' and self.cam_position == 'top':
-                            print("CHECKING")
                             set_emit1 = True
                         elif checkCan == 'Damaged Can' and self.cam_position == 'top':
                             set_emit1 = False
@@ -249,6 +264,7 @@ if __name__ == '__main__':
     set_emit1 = False
     set_emit2 = False
     set_emit3 = False
+    set_fps = 0
     csv_file = open('object_detection.csv', 'w')
     csv_writer = csv.writer(csv_file)
     csv_writer.writerow(['Object', 'Time' ])

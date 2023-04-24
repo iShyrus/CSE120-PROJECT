@@ -230,8 +230,8 @@
    <widget class="QLabel" name="fps_label">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>140</y>
+      <x>10</x>
+      <y>130</y>
       <width>101</width>
       <height>16</height>
      </rect>
