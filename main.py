@@ -140,8 +140,8 @@ class CameraFeed(QThread):
     def run(self):
         self.ThreadActive = True
         color = (255,255,255)
-        fps_start_time = 0
-        fps = 0
+        fps_start_time = 1
+        fps = 1
 
         while self.ThreadActive:
             ret, frame = self.capture.read()
@@ -150,19 +150,21 @@ class CameraFeed(QThread):
             #if count % 10 != 0:
             #    continue
 
-            """FPS"""
-            global set_fps
-            fps_end_time = time.time()
-            time_diff = fps_end_time-fps_start_time
-            fps=1/(time_diff)
-            fps_start_time = fps_end_time
-            global set_fps  
-            set_fps = fps
+
 
             """ Call Object Detection on Image """
             if ret:
                 img = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), (400, 250))
 
+                """FPS"""
+                global set_fps
+                fps_end_time = time.time()
+                time_diff = fps_end_time-fps_start_time
+                fps=1/(time_diff)
+                fps_start_time = fps_end_time
+                global set_fps  
+                set_fps = fps
+                
                 # Resize image and detect object
                 if self.model =="tinyYolo":
                     yolo = YOLO(self.weights, self.config, self.labels)
