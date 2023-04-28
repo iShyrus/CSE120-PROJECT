@@ -18,13 +18,13 @@ class MainWindow(QMainWindow):
         self.show()
 
         """ Create Camera Feeds and Connect Labels """
-        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 0, 'top')
+        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top')
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left')
+        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best-v2.weights', 'sideview-yolov4-tiny-detector-v2.cfg', 'sideview.names', 1, 'left')
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 2, 'right')
+        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best-v2.weights', 'sideview-yolov4-tiny-detector-v2.cfg', 'sideview.names', 0, 'right')
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
 
@@ -108,10 +108,6 @@ class CameraFeed(QThread):
 
         while self.ThreadActive:
             ret, frame = self.capture.read()
-            #Lower framerate
-            #count += 1
-            #if count % 10 != 0:
-            #    continue
 
             """ Call Object Detection on Image """
             if ret:
