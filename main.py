@@ -18,13 +18,13 @@ class MainWindow(QMainWindow):
         self.show()
 
         """ Create Camera Feeds and Connect Labels """
-        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top')
+        self.top_camera = CameraFeed('yolov4-tiny-detector_best-topview-v2.weights', 'yolov4-tiny-detector-topview-v2.cfg', 'topview.names', 2, 'top')
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best-v2.weights', 'sideview-yolov4-tiny-detector-v2.cfg', 'sideview.names', 1, 'left')
+        self.left_camera = CameraFeed('yolov4-tiny-detector_best-sideview-v2.weights', 'yolov4-tiny-detector-sideview-v2.cfg', 'sideview.names', 1, 'left')
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best-v2.weights', 'sideview-yolov4-tiny-detector-v2.cfg', 'sideview.names', 0, 'right')
+        self.right_camera = CameraFeed('yolov4-tiny-detector_best-sideview-v2.weights', 'yolov4-tiny-detector-sideview-v2.cfg', 'sideview.names', 0, 'right')
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
 
