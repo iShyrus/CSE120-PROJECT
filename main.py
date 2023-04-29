@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left',"tinyYolo")
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 0, 'right',"tinyYolo")
+        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 3, 'right',"tinyYolo")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
 
@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
         self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left',"tinyYolo")
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 0, 'right',"tinyYolo")
+        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 3, 'right',"tinyYolo")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
         self.top_camera.start()
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         self.left_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 1, 'left',"yolov8")
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 0, 'right',"yolov8")
+        self.right_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 3, 'right',"yolov8")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
         self.top_camera.start()
@@ -243,13 +243,20 @@ class CameraFeed(QThread):
                         confidence = confidence.replace("], device='cuda:0')","")
                         for c in r.boxes.cls:
                             checkCan = model.names[int(c)]
+                            if checkCan == "0":
+                                checkCan ="Good can"
 
-
+                    if self.cam_position == "left":
+                        print("left:"+checkCan)
+                    if self.cam_position == "top":
+                        print("top:"+checkCan)
+                    if self.cam_position == "right":
+                        print("right:"+checkCan)
                     """ Classify Detected Object and Update Notification"""
                     try:
                         # Make sure confidence level is high enough
-                        if int(confidence) < .85:
-                            continue
+                        # if int(confidence) < .85:
+                        #     continue
                         # Global variable for can classification
 
                         # Set can global variable
