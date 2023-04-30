@@ -4,13 +4,13 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5 import uic
 from PyQt5.QtCore import QTimer
-
 import cv2
 from cvlib.object_detection import YOLO
 import csv
 import datetime
 from ultralytics import YOLO as YOLOV8
 from ultralytics.yolo.v8.detect.predict import DetectionPredictor
+from ultralytics.yolo.utils.plotting import Annotator
 import time
 
 CAMERA_WIDTH = 640
@@ -39,13 +39,13 @@ class MainWindow(QMainWindow):
         self.timer.start()
 
         """ Create CameraFeed Objects, Default to TinyYolo (less demanding)"""
-        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top',"tinyYolo")
+        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 0, 'top',"tinyYolo")
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
         self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left',"tinyYolo")
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 3, 'right',"tinyYolo")
+        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 8, 'right',"tinyYolo")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
 
@@ -57,13 +57,13 @@ class MainWindow(QMainWindow):
         self.top_camera.stop()
         self.left_camera.stop()
         self.right_camera.stop()
-        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 2, 'top',"tinyYolo")
+        self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 0, 'top',"tinyYolo")
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
         self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left',"tinyYolo")
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 3, 'right',"tinyYolo")
+        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 8, 'right',"tinyYolo")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
         self.top_camera.start()
@@ -79,13 +79,13 @@ class MainWindow(QMainWindow):
         self.top_camera.stop()
         self.left_camera.stop()
         self.right_camera.stop()
-        self.top_camera = CameraFeed(YOLOV8('topYoloV8Weights.pt'), '', '', 2, 'top',"yolov8")
+        self.top_camera = CameraFeed(YOLOV8('best_3.pt'), '', '', 0, 'top',"yolov8")
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 1, 'left',"yolov8")
+        self.left_camera = CameraFeed(YOLOV8('best_3_side.pt'), '', '', 1, 'left',"yolov8")
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed(YOLOV8('yolov8side.pt'), '', '', 3, 'right',"yolov8")
+        self.right_camera = CameraFeed(YOLOV8('best_3_side.pt'), '', '', 8, 'right',"yolov8")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
         self.top_camera.start()
@@ -235,9 +235,17 @@ class CameraFeed(QThread):
                 if self.model == "yolov8":
 
                     model = self.weights
-                    detect_params = model.predict(source=[frame], conf=0.9)
+                    detect_params = model.predict(source=[frame], conf=0.7)
                     checkCan ="Nothing"
                     for r in detect_params:
+                        annotator = Annotator(frame)
+                        boxes = r.boxes
+                        for box in boxes:
+
+                            b = box.xyxy[0]  # get box coordinates in (top, left, bottom, right) format
+                            c = box.cls
+                            annotator.box_label(b, model.names[int(c)])
+    
                         confidence = str(r.boxes.conf)
                         confidence = confidence.replace("tensor([","")
                         confidence = confidence.replace("], device='cuda:0')","")
@@ -245,6 +253,7 @@ class CameraFeed(QThread):
                             checkCan = model.names[int(c)]
                             if checkCan == "0":
                                 checkCan ="Good can"
+                    img = annotator.result()
 
                     if self.cam_position == "left":
                         print("left:"+checkCan)
