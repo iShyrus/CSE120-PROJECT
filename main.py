@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
     def yolov8Check(self):
         self.on_pushButton.setStyleSheet('QPushButton { background-image: url(on.png); }')
         self.notification_label.setStyleSheet(open('accepted.css').read())
-        self.notification_label.setText('YoloV8')
+        self.notification_label.setText('YOLOv8')
         self.top_camera.stop()
         self.left_camera.stop()
         self.right_camera.stop()
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         self.left_camera = CameraFeed(YOLOV8('best_3_side.pt'), '', '', 1, 'left',"yolov8")
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed(YOLOV8('best_3_side.pt'), '', '', 8, 'right',"yolov8")
+        self.right_camera = CameraFeed(YOLOV8('best_3_side.pt'), '', '', 3, 'right',"yolov8")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
         self.top_camera.start()
@@ -292,7 +292,7 @@ class CameraFeed(QThread):
 
                 """ Recreate QT compatible image"""
                 convert_to_QtFormat = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGB888)
-                pic = convert_to_QtFormat.scaled(400, 250, Qt.KeepAspectRatio)
+                pic = convert_to_QtFormat.scaled(320, 320, Qt.KeepAspectRatio)
                 self.image_update.emit(pic)
 
 
