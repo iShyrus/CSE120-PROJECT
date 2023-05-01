@@ -173,6 +173,8 @@ class CameraFeed(QThread):
         fps_start_time = 1
         fps = 1
         count=0
+        didCSV = False
+
         while self.ThreadActive:
             ret, frame = self.capture.read()
             #Lower framerate
@@ -287,57 +289,57 @@ class CameraFeed(QThread):
                         print('No object detected')
 
 
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)       
-                blur = cv2.GaussianBlur(gray,(5,5),0)
-                circles = cv2.HoughCircles(blur, cv2.HOUGH_GRADIENT, dp=1, minDist=110, param1=40, param2=30, minRadius=200, maxRadius=210)
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)       
+                    blur = cv2.GaussianBlur(gray,(5,5),0)
+                    circles = cv2.HoughCircles(blur, cv2.HOUGH_GRADIENT, dp=1, minDist=110, param1=40, param2=30, minRadius=200, maxRadius=210)
 
-                if self.cam_position =="top":
-                    if circles is not None:
-                        print(didCSV)
-                        if didCSV==False:
-                            if checkCan!="Nothing":
-                                leftStatus= ""
-                                rightStatus = ""
-                                topStatus = ""
-                                count+=1
-                                if set_emit2 == False:
-                                    leftStatus = "Bad"
-                                elif set_emit2 == True:
-                                    leftStatus = "Good"
+                    if self.cam_position =="top":
+                        if circles is not None:
+                            print(didCSV)
+                            if didCSV==False:
+                                if checkCan!="Nothing":
+                                    leftStatus= ""
+                                    rightStatus = ""
+                                    topStatus = ""
+                                    count+=1
+                                    if set_emit2 == False:
+                                        leftStatus = "Bad"
+                                    elif set_emit2 == True:
+                                        leftStatus = "Good"
 
-                                if set_emit3 == False:
-                                    rightStatus = "Bad"
-                                elif set_emit3 == True:
-                                    rightStatus = "Good"
-                                if "Damaged" in checkCan:
-                                    topStatus = "Bad"
-                                elif "Good" in checkCan:
-                                    topStatus = "Good"
+                                    if set_emit3 == False:
+                                        rightStatus = "Bad"
+                                    elif set_emit3 == True:
+                                        rightStatus = "Good"
+                                    if "Damaged" in checkCan:
+                                        topStatus = "Bad"
+                                    elif "Good" in checkCan:
+                                        topStatus = "Good"
 
-                                today = date.today()
-                                t = time.localtime()
-                                currentTime = time.strftime("%H:%M:%S",t)
-                                dict = {"Date":today,"Time":currentTime,"Can Number":str(count),"Can Lid Status":topStatus,"Can Left Status":leftStatus, "Can Right Status":rightStatus}
-                                fieldNames = ["Date","Time","Can Number","Can Lid Status","Can Left Status", "Can Right Status"]   
+                                    today = date.today()
+                                    t = time.localtime()
+                                    currentTime = time.strftime("%H:%M:%S",t)
+                                    dict = {"Date":today,"Time":currentTime,"Can Number":str(count),"Can Lid Status":topStatus,"Can Left Status":leftStatus, "Can Right Status":rightStatus}
+                                    fieldNames = ["Date","Time","Can Number","Can Lid Status","Can Left Status", "Can Right Status"]   
 
-                                with open("cans.csv", "a", newline ="") as csv_file:
-                                    dict_object = csv.DictWriter(csv_file, fieldnames=fieldNames) 
-                                    dict_object.writerow(dict)
-                            
-                            
-                                didCSV = True
+                                    with open("cans.csv", "a", newline ="") as csv_file:
+                                        dict_object = csv.DictWriter(csv_file, fieldnames=fieldNames) 
+                                        dict_object.writerow(dict)
+                                
+                                
+                                    didCSV = True
 
-                        circles = np.round(circles[0, :]).astype("int")
-                        for (x, y, r) in circles:
-                            # if pixelToCm:   
-                            #     objectDiameter = (r/pixelToCm)
-                            cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
-                            cv2.circle(frame, (int(x),int(y)),5,(0,0,255),-1)
-                            # cv2.putText(img_copy, "Radius {}cm".format(round(objectDiameter,2)), (int(x),int(y-15)), cv2.FONT_HERSHEY_PLAIN,2, (100,200,0),2)
+                            circles = np.round(circles[0, :]).astype("int")
+                            for (x, y, r) in circles:
+                                # if pixelToCm:   
+                                #     objectDiameter = (r/pixelToCm)
+                                cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
+                                cv2.circle(frame, (int(x),int(y)),5,(0,0,255),-1)
+                                # cv2.putText(img_copy, "Radius {}cm".format(round(objectDiameter,2)), (int(x),int(y-15)), cv2.FONT_HERSHEY_PLAIN,2, (100,200,0),2)
 
-                    elif circles is None:
-                        didCSV=False
-                        print("test")
+                        elif circles is None:
+                            didCSV=False
+                            print("test")
 
 
                 """ Recreate QT compatible image"""
