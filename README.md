@@ -25,8 +25,8 @@ Connect the cameras to the computer and make sure it is recognized by OpenCV.
 </code></pre>
 
 ## Usage
-When you run the software, the interface will have a power button to start the cameras and object detection.
-When turned on it will enable all the cameras and begin capturing images to analyzing them, defaulting to TinyYOLO (CPU). You may select the higher performance option that ultilizes a GPU by choosing from button on the upper left corner.
+When you run the software, the interface will have a button to the left of the screen to start the cameras and object detection.
+When turned on it will enable all the cameras and begin capturing images to analyze them. The app defaults to TinyYOLO which uses solely CPU. You may select the higher performance option that ultilizes a GPU by selecting the YoloV8 button on the upper left corner.
 
 The detected cans will be marked with a bounding box along with a label of their classication. If a can is detected with any damage, a warning message will be displayed on top of the screen.
 
@@ -37,3 +37,5 @@ The images below demonstrate the application when detecting a good and bad can.
 
 <img src="https://hackmd.io/_uploads/Skg3cFuNh.png)
 " width=600><br>
+
+A CSV file will be generated if one does not already exist in the directory. The CSV file should make a row for every object detected with the can's classification and the timestamp.
