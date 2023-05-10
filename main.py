@@ -44,10 +44,10 @@ class MainWindow(QMainWindow):
         self.top_camera = CameraFeed('top-detection_best.weights', 'top-detection.cfg', 'top-detection.names', 0, 'top',"tinyYolo")
         self.top_camera.image_update.connect(self.image_update_slot1)
         self.top_camera.notification_update.connect(self.notification_banner_update)
-        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 1, 'left',"tinyYolo")
+        self.left_camera = CameraFeed('sideview-yolov4-tiny-detector_best-v1.weights', 'sideview-yolov4-tiny-detector-v1.cfg', 'sideview.names', 1, 'left',"tinyYolo")
         self.left_camera.image_update.connect(self.image_update_slot2)
         self.left_camera.notification_update.connect(self.notification_banner_update)
-        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best.weights', 'sideview-yolov4-tiny-detector.cfg', 'sideview.names', 3, 'right',"tinyYolo")
+        self.right_camera = CameraFeed('sideview-yolov4-tiny-detector_best-v1.weights', 'sideview-yolov4-tiny-detector-v1.cfg', 'sideview.names', 3, 'right',"tinyYolo")
         self.right_camera.image_update.connect(self.image_update_slot3)
         self.right_camera.notification_update.connect(self.notification_banner_update)
 
@@ -291,7 +291,7 @@ class CameraFeed(QThread):
 
                     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)       
                     blur = cv2.GaussianBlur(gray,(5,5),0)
-                    circles = cv2.HoughCircles(blur, cv2.HOUGH_GRADIENT, dp=1, minDist=110, param1=40, param2=30, minRadius=200, maxRadius=210)
+                    circles = cv2.HoughCircles(blur, cv2.HOUGH_GRADIENT, dp=1, minDist=110, param1=40, param2=30, minRadius=180, maxRadius=190)
 
                     if self.cam_position =="top":
                         if circles is not None:
